@@ -183,6 +183,9 @@ def home():
     ]
     expiring_count = len(expiring_soon)
     
+    # Calculate consumed count
+    consumed_count = len(datasheet_df[datasheet_df['Status'] == 'Consumed'])
+    
     # Convert DataFrame to HTML table or pass data to template
     table_data = datasheet_df_display.to_dict('records')  # Convert to list of dictionaries
     columns = datasheet_df_display.columns.tolist()  # Get column names
@@ -199,68 +202,41 @@ def home():
                          unique_status=unique_status,
                          total_records=len(datasheet_df),
                          expiring_count=expiring_count,
+                         consumed_count=consumed_count,
                          original_data=original_data)
 
-
-# Debug Edit CRM route - let's see what form data we're getting
+# Edit CRM route
 @app.route('/edit_crm/<crm_id>', methods=['GET', 'POST'])
 @login_required
 def edit_crm(crm_id):
     from bson import ObjectId
-    from datetime import datetime
     
     if request.method == 'POST':
         # Handle form submission
+        form_data = {
+            'Name': request.form.get('name_of_standard'),
+            'Lab Code': request.form.get('lab_code'),
+            'Expiry date': pd.to_datetime(request.form.get('expiry_date')),
+            'Make': request.form.get('make') or 'NA',
+            'Quantity': request.form.get('quantity') or 'NA',
+            'Purity': request.form.get('purity') or 'NA',
+            'Product Code': request.form.get('product_code') or 'NA',
+            'CAS no.': request.form.get('cas_no') or 'NA',
+            'Section': request.form.get('section'),
+            'Location': request.form.get('location') or 'NA',
+            'Box No.': request.form.get('box_no') or 'NA',
+            'Remarks': request.form.get('remarks') or 'NA'
+        }
+        
+        # Update in MongoDB
         try:
-            print("DEBUG: Form data received:")
-            for key, value in request.form.items():
-                print(f"  {key}: '{value}'")
-            
-            # Get the existing document first
-            existing_doc = datasheet_collection.find_one({'_id': ObjectId(crm_id)})
-            if not existing_doc:
-                flash('CRM entry not found!', 'error')
-                return redirect(url_for('home'))
-            
-            # Update the existing document with new values
-            existing_doc['Name'] = request.form.get('name_of_standard')
-            existing_doc['Lab Code'] = request.form.get('lab_code')
-            existing_doc['Expiry date'] = pd.to_datetime(request.form.get('expiry_date'))
-            existing_doc['Make'] = request.form.get('make') or 'NA'
-            existing_doc['Quantity'] = request.form.get('quantity') or 'NA'
-            existing_doc['Purity'] = request.form.get('purity') or 'NA'
-            existing_doc['Product Code'] = request.form.get('product_code') or 'NA'
-            
-            # Debug CAS no specifically
-            cas_value = request.form.get('cas_no')
-            print(f"DEBUG: CAS no value: '{cas_value}' (type: {type(cas_value)})")
-            existing_doc['CAS no.'] = cas_value or 'NA'
-            
-            existing_doc['Section'] = request.form.get('section')
-            existing_doc['Location'] = request.form.get('location') or 'NA'
-            existing_doc['Box No.'] = request.form.get('box_no') or 'NA'
-            existing_doc['Remarks'] = request.form.get('remarks') or 'NA'
-            
-            print("DEBUG: About to update document:")
-            print(f"  CAS no. will be set to: '{existing_doc['CAS no.']}'")
-            
-            # Replace the entire document
-            result = datasheet_collection.replace_one(
+            datasheet_collection.update_one(
                 {'_id': ObjectId(crm_id)}, 
-                existing_doc
+                {'$set': form_data}
             )
-            
-            if result.modified_count > 0:
-                flash('CRM entry updated successfully!', 'success')
-                return redirect(url_for('home'))
-            else:
-                flash('No changes were made to the entry.', 'info')
-                return redirect(url_for('edit_crm', crm_id=crm_id))
-                
+            flash('CRM entry updated successfully!', 'success')
+            return redirect(url_for('home'))
         except Exception as e:
-            print(f"DEBUG: Error in POST: {str(e)}")
-            import traceback
-            traceback.print_exc()
             flash(f'Error updating entry: {str(e)}', 'error')
             return redirect(url_for('edit_crm', crm_id=crm_id))
     
@@ -270,28 +246,6 @@ def edit_crm(crm_id):
         if not crm_data:
             flash('CRM entry not found!', 'error')
             return redirect(url_for('home'))
-        
-        print(f"DEBUG: Loaded CRM data CAS no.: '{crm_data.get('CAS no.', 'NOT FOUND')}'")
-        
-        # Fix the expiry date format for the template
-        if crm_data.get('Expiry date'):
-            expiry_date = crm_data['Expiry date']
-            if isinstance(expiry_date, str):
-                # If it's a string, try to parse it and format it
-                try:
-                    if len(expiry_date) >= 10:
-                        crm_data['formatted_expiry_date'] = expiry_date[:10]  # Take first 10 chars (YYYY-MM-DD)
-                    else:
-                        crm_data['formatted_expiry_date'] = expiry_date
-                except:
-                    crm_data['formatted_expiry_date'] = ''
-            elif hasattr(expiry_date, 'strftime'):
-                # If it's a datetime object
-                crm_data['formatted_expiry_date'] = expiry_date.strftime('%Y-%m-%d')
-            else:
-                crm_data['formatted_expiry_date'] = ''
-        else:
-            crm_data['formatted_expiry_date'] = ''
         
         # Get unique values for dropdowns
         datasheet_df = pd.DataFrame(list(datasheet_collection.find()))
@@ -303,10 +257,8 @@ def edit_crm(crm_id):
                              unique_names=unique_names,
                              unique_sections=unique_sections)
     except Exception as e:
-        print(f"DEBUG: Error in GET: {str(e)}")
         flash(f'Error loading entry: {str(e)}', 'error')
         return redirect(url_for('home'))
-        
 
 # Delete CRM route
 @app.route('/delete_crm/<crm_id>', methods=['POST'])

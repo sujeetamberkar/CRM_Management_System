@@ -184,6 +184,17 @@
             margin-left: 8px;
         }
 
+        /* Badge for consumed count */
+        .consumed-badge {
+            background: #ffa502;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
         /* Section B - Table Container */
         .content-section {
             padding: 30px;
@@ -464,6 +475,12 @@
                     <span class="expiring-badge">{{ expiring_count }}</span>
                     {% endif %}
                 </button>
+                <button class="tab-btn" id="consumedBtn" onclick="showConsumed()">
+                    Consumed CRMs
+                    {% if consumed_count > 0 %}
+                    <span class="consumed-badge">{{ consumed_count }}</span>
+                    {% endif %}
+                </button>
             </div>
         </div>
     </div>
@@ -622,11 +639,12 @@
             currentData = [...originalTableData];
             document.getElementById('allCrmsBtn').classList.add('active');
             document.getElementById('expiringBtn').classList.remove('active');
+            document.getElementById('consumedBtn').classList.remove('active');
             clearFilters();
             filterTable();
         }
 
-        // Show expiring in 3 months
+        // Show expiring in 3 months (excluding consumed items)
         function showExpiring() {
             const expiringData = originalTableData.filter(row => {
                 if (!row['Expiry date'] || row.Status === 'Consumed') return false;
@@ -637,6 +655,21 @@
             currentData = expiringData;
             document.getElementById('expiringBtn').classList.add('active');
             document.getElementById('allCrmsBtn').classList.remove('active');
+            document.getElementById('consumedBtn').classList.remove('active');
+            clearFilters();
+            filterTable();
+        }
+
+        // Show only consumed items
+        function showConsumed() {
+            const consumedData = originalTableData.filter(row => {
+                return row.Status === 'Consumed';
+            });
+            
+            currentData = consumedData;
+            document.getElementById('consumedBtn').classList.add('active');
+            document.getElementById('allCrmsBtn').classList.remove('active');
+            document.getElementById('expiringBtn').classList.remove('active');
             clearFilters();
             filterTable();
         }
@@ -723,11 +756,16 @@
                 const expiryDate = new Date(row['Expiry date']);
                 return expiryDate >= today && expiryDate <= threeMonthsFromNow;
             }).length;
+            const consumedCount = originalTableData.filter(row => row.Status === 'Consumed').length;
             
             document.getElementById('allCrmsBtn').innerHTML = `All CRMs (${allCount})`;
             document.getElementById('expiringBtn').innerHTML = `
                 Expiring in 3 Months
                 ${expiringCount > 0 ? `<span class="expiring-badge">${expiringCount}</span>` : ''}
+            `;
+            document.getElementById('consumedBtn').innerHTML = `
+                Consumed CRMs
+                ${consumedCount > 0 ? `<span class="consumed-badge">${consumedCount}</span>` : ''}
             `;
         }
 
