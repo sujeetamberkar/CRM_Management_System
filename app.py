@@ -166,11 +166,71 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/create_crm')
+@app.route('/create_crm', methods=['GET', 'POST'])
 @login_required
 def create_crm():
-    """Route to display the Create CRM form"""
-    return render_template('create_crm.html')
+    """Route to display and handle the Create CRM form"""
+    if request.method == 'POST':
+        # Handle form submission
+        form_data = {
+            'Name': request.form.get('name_of_standard'),
+            'Lab Code': request.form.get('lab_code'),
+            'Expiry date': pd.to_datetime(request.form.get('expiry_date')),
+            'Make': request.form.get('make') or 'NA',
+            'Quantity': request.form.get('quantity') or 'NA',
+            'Purity': request.form.get('purity') or 'NA',
+            'Product Code': request.form.get('product_code') or 'NA',
+            'CAS no.': request.form.get('cas_no') or 'NA',
+            'Section': request.form.get('section'),
+            'Location': request.form.get('location') or 'NA',
+            'Box No.': request.form.get('box_no') or 'NA',
+            'Remarks': request.form.get('remarks') or 'NA',
+            'Status': 'Active'  # Default status for new entries
+        }
+        
+        # Validate Lab Code is not empty and unique
+        lab_code = form_data['Lab Code']
+        if not lab_code or lab_code.strip() == '':
+            flash('Lab Code cannot be empty!', 'error')
+            return redirect(url_for('create_crm'))
+            
+        # Check if Lab Code already exists
+        if datasheet_collection.find_one({'Lab Code': lab_code}):
+            flash('Lab Code already exists! Please use a different code.', 'error')
+            return redirect(url_for('create_crm'))
+        
+        # Insert into MongoDB
+        try:
+            datasheet_collection.insert_one(form_data)
+            flash('CRM entry created successfully!', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            flash(f'Error creating entry: {str(e)}', 'error')
+            return redirect(url_for('create_crm'))
+    
+    # GET request - display form
+    # Get existing data for dropdowns
+    datasheet_df = pd.DataFrame(list(datasheet_collection.find()))
+    
+    # Get unique values for dropdowns
+    unique_names = sorted(datasheet_df['Name'].dropna().unique().tolist()) if not datasheet_df.empty else []
+    unique_sections = sorted(datasheet_df['Section'].dropna().unique().tolist()) if not datasheet_df.empty else []
+    
+    # Get existing lab codes for suggestion logic
+    existing_lab_codes = datasheet_df['Lab Code'].dropna().tolist() if not datasheet_df.empty else []
+    
+    # Create name to CAS mapping
+    name_cas_mapping = {}
+    if not datasheet_df.empty:
+        for _, row in datasheet_df.iterrows():
+            if pd.notna(row['Name']) and pd.notna(row['CAS no.']):
+                name_cas_mapping[row['Name']] = row['CAS no.']
+    
+    return render_template('create_crm.html',
+                         unique_names=unique_names,
+                         unique_sections=unique_sections,
+                         existing_lab_codes=existing_lab_codes,
+                         name_cas_mapping=name_cas_mapping)
 
 
 if __name__ == '__main__':

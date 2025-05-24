@@ -3,10 +3,637 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Create New CRM Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header/Banner Section */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 20px;
+        }
+
+        /* Navigation buttons container */
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Home button styling */
+        .home-btn {
+            background-color: #2ed573;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .home-btn:hover {
+            background-color: #26d365;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Logout button styling */
+        .logout-btn {
+            background-color: #ff4757;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background-color: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                padding: 15px 20px;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+                order: 2;
+            }
+
+            .logo {
+                order: 1;
+            }
+
+            .nav-buttons {
+                order: 3;
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .home-btn, .logout-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-buttons {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .home-btn, .logout-btn {
+                width: 100%;
+                max-width: 200px;
+                text-align: center;
+            }
+        }
+
+        /* Form Container Styling */
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Form Layout */
+        form {
+            padding: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* Input Styling */
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Input with button styling */
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .input-with-button input {
+            flex: 1;
+        }
+
+        .suggest-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .suggest-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        /* Special styling for dropdown with "Add New" option */
+        #newStandardInput {
+            margin-top: 10px;
+            border-color: #2ed573;
+        }
+
+        #newStandardInput:focus {
+            border-color: #26d365;
+            box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.1);
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cancel-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+            transform: translateY(-1px);
+        }
+
+        .create-btn-form {
+            background: linear-gradient(135deg, #2ed573 0%, #26d365 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-btn-form:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(46, 213, 115, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .form-container {
+                margin: 0 15px;
+            }
+
+            form {
+                padding: 20px;
+            }
+
+            .form-header {
+                padding: 20px;
+            }
+
+            .form-header h2 {
+                font-size: 20px;
+            }
+
+            .input-with-button {
+                flex-direction: column;
+            }
+
+            .suggest-btn {
+                align-self: flex-start;
+                min-width: 140px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .cancel-btn,
+            .create-btn-form {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Flash message styling */
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .content-section {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .page-title h2 {
+            color: #4834d4;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .page-title p {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-    hi
-    
+    <!-- Header/Banner Section -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Envirocare Labs">
+        </div>
+        <h1>CRM Management System</h1>
+        <div class="nav-buttons">
+            <a href="{{ url_for('home') }}" class="home-btn">Home</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- Content Section - Form -->
+    <div class="content-section">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Create New CRM Entry</h2>
+            </div>
+            
+            <form id="crmForm" method="POST" action="{{ url_for('create_crm') }}">
+                <!-- Row 1: Name of Standard and Lab Code -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nameStandard">Name of the Standard</label>
+                        <select id="nameStandard" name="name_of_standard" required>
+                            <option value="">Select Standard</option>
+                            {% for name in unique_names %}
+                            <option value="{{ name }}">{{ name }}</option>
+                            {% endfor %}
+                            <option value="__add_new__">+ Add New Standard</option>
+                        </select>
+                        <input type="text" id="newStandardInput" name="new_standard_name" 
+                               placeholder="Enter new standard name" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="labCode">Lab Code</label>
+                        <div class="input-with-button">
+                            <input type="text" id="labCode" name="lab_code" required>
+                            <button type="button" id="suggestCodeBtn" class="suggest-btn">Suggest Code</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Expiry Date and Make -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="date" id="expiryDate" name="expiry_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="make">Make</label>
+                        <input type="text" id="make" name="make">
+                    </div>
+                </div>
+
+                <!-- Row 3: Quantity and Purity -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="text" id="quantity" name="quantity">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="purity">Purity</label>
+                        <input type="text" id="purity" name="purity">
+                    </div>
+                </div>
+
+                <!-- Row 4: Product Code and CAS No -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCode">Product Code</label>
+                        <input type="text" id="productCode" name="product_code">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="casNo">CAS No</label>
+                        <input type="text" id="casNo" name="cas_no" value="NA">
+                    </div>
+                </div>
+
+                <!-- Row 5: Section and Location -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="section">Section</label>
+                        <select id="section" name="section" required>
+                            <option value="">Select Section</option>
+                            {% for section in unique_sections %}
+                            <option value="{{ section }}">{{ section }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location">
+                    </div>
+                </div>
+
+                <!-- Row 6: Box No and Remarks -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="boxNo">Box No</label>
+                        <input type="text" id="boxNo" name="box_no">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="remarks">Remarks</label>
+                        <input type="text" id="remarks" name="remarks">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="window.location.href='{{ url_for('home') }}'">Cancel</button>
+                    <button type="submit" class="create-btn-form">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data from Flask
+        const nameCasMapping = {{ name_cas_mapping | tojson }};
+        const existingLabCodes = {{ existing_lab_codes | tojson }};
+        const uniqueNames = {{ unique_names | tojson }};
+
+        // Handle Name of Standard dropdown change
+        document.getElementById('nameStandard').addEventListener('change', function() {
+            const selectedValue = this.value;
+            const newStandardInput = document.getElementById('newStandardInput');
+            const casNoInput = document.getElementById('casNo');
+            
+            if (selectedValue === '__add_new__') {
+                // Show the new standard input
+                newStandardInput.style.display = 'block';
+                newStandardInput.required = true;
+                this.required = false;
+                casNoInput.value = 'NA';
+            } else {
+                // Hide the new standard input
+                newStandardInput.style.display = 'none';
+                newStandardInput.required = false;
+                this.required = true;
+                
+                // Auto-fill CAS No based on selected standard
+                if (selectedValue && nameCasMapping[selectedValue]) {
+                    casNoInput.value = nameCasMapping[selectedValue];
+                } else {
+                    casNoInput.value = 'NA';
+                }
+            }
+        });
+
+        // Suggest Lab Code functionality
+        document.getElementById('suggestCodeBtn').addEventListener('click', function() {
+            const nameStandardSelect = document.getElementById('nameStandard');
+            const newStandardInput = document.getElementById('newStandardInput');
+            const labCodeInput = document.getElementById('labCode');
+            
+            let selectedStandard = '';
+            
+            if (nameStandardSelect.value === '__add_new__') {
+                // New standard - start from H-102
+                const suggestedCode = getNextAvailableNewCode();
+                labCodeInput.value = suggestedCode;
+            } else if (nameStandardSelect.value) {
+                // Existing standard - find next letter suffix
+                selectedStandard = nameStandardSelect.value;
+                const suggestedCode = getNextCodeForStandard(selectedStandard);
+                labCodeInput.value = suggestedCode;
+            } else {
+                alert('Please select a standard first');
+            }
+        });
+
+        // Get next available code for new standards (starting from H-102)
+        function getNextAvailableNewCode() {
+            let codeNumber = 102;
+            while (true) {
+                const baseCode = `H-${codeNumber}`;
+                const codeExists = existingLabCodes.some(code => 
+                    code && code.startsWith(baseCode)
+                );
+                
+                if (!codeExists) {
+                    return baseCode;
+                }
+                codeNumber++;
+            }
+        }
+
+        // Get next code for existing standard
+        function getNextCodeForStandard(standardName) {
+            // Find the base code for this standard
+            const baseCode = getBaseCodeForStandard(standardName);
+            
+            if (!baseCode) {
+                // If no base code found, start from H-102
+                return getNextAvailableNewCode();
+            }
+            
+            // Find the next available letter suffix
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            
+            for (let i = 0; i < letters.length; i++) {
+                const testCode = baseCode + ' ' + letters[i];
+                if (!existingLabCodes.includes(testCode)) {
+                    return testCode;
+                }
+            }
+            
+            // If all letters are used, start double letters
+            for (let i = 0; i < letters.length; i++) {
+                for (let j = 0; j < letters.length; j++) {
+                    const testCode = baseCode + ' ' + letters[i] + letters[j];
+                    if (!existingLabCodes.includes(testCode)) {
+                        return testCode;
+                    }
+                }
+            }
+            
+            return baseCode + ' Z'; // Fallback
+        }
+
+        // Get base code for a standard by looking at existing codes
+        function getBaseCodeForStandard(standardName) {
+            // This would need to be implemented based on your data
+            // For now, return null to use new code logic
+            return null;
+        }
+
+        // Form validation
+        document.getElementById('crmForm').addEventListener('submit', function(e) {
+            const labCode = document.getElementById('labCode').value.trim();
+            
+            if (!labCode) {
+                e.preventDefault();
+                alert('Lab Code is required!');
+                return false;
+            }
+            
+            // Check if lab code already exists
+            if (existingLabCodes.includes(labCode)) {
+                e.preventDefault();
+                alert('Lab Code already exists! Please use a different code.');
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
 </body>
 </html>
