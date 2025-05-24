@@ -4,7 +4,6 @@ A comprehensive web-based Chemical Reference Material (CRM) management system de
 
 ## 📋 Table of Contents
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
@@ -91,7 +90,7 @@ A comprehensive web-based Chemical Reference Material (CRM) management system de
 ## 📁 Project Structure
 
 ```
-crm-management-system/
+CRM_Management_System/
 ├── app.py                      # Main Flask application
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # Project documentation
@@ -119,8 +118,8 @@ crm-management-system/
 #### On Windows:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create virtual environment
 python3 -m venv virtual
@@ -138,8 +137,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create virtual environment
 python3 -m venv virtual
@@ -159,8 +158,8 @@ python app.py
 #### On Windows:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create conda environment
 conda create --name crm-env python=3.9
@@ -178,8 +177,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create conda environment
 conda create --name crm-env python=3.9
@@ -342,7 +341,7 @@ Your Excel file should have the following columns:
 
 ```bash
 # Make sure you're in your project directory
-cd crm-management-system
+cd CRM_Management_System
 
 # Activate your virtual environment
 # For venv:
@@ -449,7 +448,7 @@ The application will automatically create the following collections:
 ## 🖥️ Usage
 
 ### First-Time Setup
-1. Start the application: `python3 app.py`
+1. Start the application: `python app.py`
 2. Open your browser and navigate to `http://127.0.0.1:8000`
 3. The application will create default admin credentials:
    - **Username**: `admin`
@@ -549,5 +548,5 @@ The system uses intelligent status calculation:
 - Check if users collection was created properly
 - Verify bcrypt is working correctly
 
-# Author
+# Author 
 Sujeet Sanjay Amberkar
