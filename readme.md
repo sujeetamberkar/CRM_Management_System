@@ -120,8 +120,8 @@ crm-management-system/
 #### On Windows:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create virtual environment
 python3 -m venv virtual
@@ -139,8 +139,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create virtual environment
 python3 -m venv virtual
@@ -160,8 +160,8 @@ python app.py
 #### On Windows:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create conda environment
 conda create --name crm-env python=3.9
@@ -179,8 +179,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd crm-management-system
+git clone https://github.com/sujeetamberkar/CRM_Management_System
+cd CRM_Management_System
 
 # Create conda environment
 conda create --name crm-env python=3.9
