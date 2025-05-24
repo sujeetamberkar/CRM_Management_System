@@ -130,7 +130,7 @@
             background-color: #fdfdfd;
         }
 
-        /* Status styling - now as first column */
+        /* Status styling - updated with Consumed status */
         .status-active {
             background-color: #2ed573;
             color: white;
@@ -153,6 +153,73 @@
             display: inline-block;
             text-align: center;
             min-width: 70px;
+        }
+
+        .status-consumed {
+            background-color: #ffa502;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        /* Actions column styling */
+        .actions-cell {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+
+        .consume-btn {
+            background: #ffa502;
+            color: white;
+        }
+
+        .consume-btn:hover {
+            background: #ff9502;
+        }
+
+        .unconsume-btn {
+            background: #2ed573;
+            color: white;
+        }
+
+        .unconsume-btn:hover {
+            background: #26d365;
         }
 
         /* First column (Status) styling */
@@ -422,16 +489,21 @@
                             {% for column in columns %}
                             <th>{{ column }}</th>
                             {% endfor %}
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in table_data %}
+                        {% for loop_index in range(table_data|length) %}
+                        {% set row = table_data[loop_index] %}
+                        {% set original_row = original_data[loop_index] %}
                         <tr>
                             {% for column in columns %}
                             <td>
                                 {% if column == 'Status' %}
                                     {% if row[column] == 'Active' %}
                                         <span class="status-active">{{ row[column] }}</span>
+                                    {% elif row[column] == 'Consumed' %}
+                                        <span class="status-consumed">{{ row[column] }}</span>
                                     {% else %}
                                         <span class="status-expired">{{ row[column] }}</span>
                                     {% endif %}
@@ -442,11 +514,20 @@
                                 {% endif %}
                             </td>
                             {% endfor %}
+                            <td class="actions-cell">
+                                <a href="{{ url_for('edit_crm', crm_id=original_row['_id']) }}" class="action-btn edit-btn">Edit</a>
+                                <button class="action-btn delete-btn" onclick="confirmDelete('{{ original_row['_id'] }}')">Delete</button>
+                                {% if original_row.get('Consumed', 0) == 1 %}
+                                <button class="action-btn unconsume-btn" onclick="toggleConsumed('{{ original_row['_id'] }}')">Mark Not Consumed</button>
+                                {% else %}
+                                <button class="action-btn consume-btn" onclick="toggleConsumed('{{ original_row['_id'] }}')">Mark Consumed</button>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                         {% if table_data|length == 0 %}
                         <tr>
-                            <td colspan="{{ columns|length }}" style="text-align: center; padding: 40px; color: #999;">
+                            <td colspan="{{ columns|length + 1 }}" style="text-align: center; padding: 40px; color: #999;">
                                 No records found
                             </td>
                         </tr>
@@ -460,12 +541,96 @@
     <script>
         // Store original table data
         const originalTableData = {{ table_data | tojson }};
+        const originalDataWithIds = {{ original_data | tojson }};
         let currentData = [...originalTableData];
         
         // Get today's date for expiring calculations
         const today = new Date();
         const threeMonthsFromNow = new Date();
         threeMonthsFromNow.setMonth(today.getMonth() + 3);
+
+        // Confirm delete function
+        function confirmDelete(crmId) {
+            if (confirm('Are you sure you want to delete this CRM entry? This action cannot be undone.')) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/delete_crm/${crmId}`;
+                
+                // Add CSRF token if needed (you might want to add this)
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Toggle consumed status
+        function toggleConsumed(crmId) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/toggle_consumed/${crmId}`;
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Update table with filtered data (updated for actions column)
+        function updateTable(data) {
+            const tbody = document.querySelector('tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="{{ columns|length + 1 }}" style="text-align: center; padding: 40px; color: #999;">
+                            No records found matching your criteria
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map((row, index) => {
+                const originalRow = originalDataWithIds[index];
+                return `
+                    <tr>
+                        {% for column in columns %}
+                        <td>
+                            ${formatCellValue(row['{{ column }}'], '{{ column }}')}
+                        </td>
+                        {% endfor %}
+                        <td class="actions-cell">
+                            <a href="/edit_crm/${originalRow._id}" class="action-btn edit-btn">Edit</a>
+                            <button class="action-btn delete-btn" onclick="confirmDelete('${originalRow._id}')">Delete</button>
+                            ${originalRow.Consumed === 1 ? 
+                                `<button class="action-btn unconsume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Not Consumed</button>` :
+                                `<button class="action-btn consume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Consumed</button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Format cell values (updated with Consumed status)
+        function formatCellValue(value, columnName) {
+            if (value === null || value === undefined) {
+                return 'N/A';
+            }
+            
+            if (columnName === 'Status') {
+                let statusClass = 'status-active';
+                if (value === 'Expired') statusClass = 'status-expired';
+                if (value === 'Consumed') statusClass = 'status-consumed';
+                return `<span class="${statusClass}">${value}</span>`;
+            }
+            
+            if (columnName === 'Expiry date' && value) {
+                const date = new Date(value);
+                return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            }
+            
+            return value;
+        }
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -524,7 +689,7 @@
         // Show expiring in 3 months
         function showExpiring() {
             const expiringData = originalTableData.filter(row => {
-                if (!row['Expiry date']) return false;
+                if (!row['Expiry date'] || row.Status === 'Consumed') return false;
                 const expiryDate = new Date(row['Expiry date']);
                 return expiryDate >= today && expiryDate <= threeMonthsFromNow;
             });
@@ -542,55 +707,6 @@
             document.getElementById('sectionFilter').value = 'All Sections';
             document.getElementById('statusFilter').value = 'All Status';
         }
-
-        // Update table with filtered data
-        function updateTable(data) {
-            const tbody = document.querySelector('tbody');
-            
-            if (data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="{{ columns|length }}" style="text-align: center; padding: 40px; color: #999;">
-                            No records found matching your criteria
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = data.map(row => {
-                return `
-                    <tr>
-                        {% for column in columns %}
-                        <td>
-                            ${formatCellValue(row['{{ column }}'], '{{ column }}')}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Format cell values (especially for Status and dates)
-        function formatCellValue(value, columnName) {
-            if (value === null || value === undefined) {
-                return 'N/A';
-            }
-            
-            if (columnName === 'Status') {
-                const statusClass = value === 'Active' ? 'status-active' : 'status-expired';
-                return `<span class="${statusClass}">${value}</span>`;
-            }
-            
-            if (columnName === 'Expiry date' && value) {
-                const date = new Date(value);
-                return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-            }
-            
-            return value;
-        }
-
-        // Update record counts in tab buttons
         function updateCounts() {
             const allCount = originalTableData.length;
             const expiringCount = originalTableData.filter(row => {

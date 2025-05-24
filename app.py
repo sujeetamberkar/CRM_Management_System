@@ -5,6 +5,11 @@ import bcrypt
 from datetime import datetime, date
 from functools import wraps
 import pandas as pd
+from flask import request, flash, redirect
+from bson import ObjectId
+import pandas as pd
+
+
 # Create Flask application instance
 app = Flask(__name__)
 
@@ -111,7 +116,7 @@ def login_post():
         flash('Invalid username or password.', 'error')
         return redirect(url_for('login'))
 
-# Home route - redirect to home.html after login
+# Updated Home route with new Status logic
 @app.route('/home')
 @login_required
 def home():
@@ -119,33 +124,55 @@ def home():
     datasheet_df = pd.DataFrame(list(datasheet_collection.find()))
     datasheet_df['Expiry date'] = pd.to_datetime(datasheet_df['Expiry date'], errors='coerce')
     today = pd.Timestamp.today().normalize()
-    datasheet_df['Status'] = datasheet_df['Expiry date'].apply(lambda x: 'Expired' if x < today else 'Active')
+    
+    # Updated Status logic: Check consumed first, then expiry date
+    def calculate_status(row):
+        # Check if consumed column exists and is set to 1
+        if 'Consumed' in row and row['Consumed'] == 1:
+            return 'Consumed'
+        # If not consumed, check expiry date
+        elif pd.notna(row['Expiry date']) and row['Expiry date'] < today:
+            return 'Expired'
+        else:
+            return 'Active'
+    
+    datasheet_df['Status'] = datasheet_df.apply(calculate_status, axis=1)
     
     # Remove _id column and reorder columns with Status first
     if '_id' in datasheet_df.columns:
         datasheet_df = datasheet_df.drop('_id', axis=1)
     
+    # Remove Consumed column from display (we'll use it for logic but not show it)
+    display_columns = [col for col in datasheet_df.columns if col != 'Consumed']
+    datasheet_df_display = datasheet_df[display_columns]
+    
     # Reorder columns to put Status first
-    other_columns = [col for col in datasheet_df.columns if col != 'Status']
-    if 'Status' in datasheet_df.columns:
+    other_columns = [col for col in datasheet_df_display.columns if col != 'Status']
+    if 'Status' in datasheet_df_display.columns:
         ordered_columns = ['Status'] + other_columns
-        datasheet_df = datasheet_df[ordered_columns]
+        datasheet_df_display = datasheet_df_display[ordered_columns]
     
     # Get unique values for dropdowns
     unique_sections = ['All Sections'] + sorted(datasheet_df['Section'].dropna().unique().tolist())
     unique_status = ['All Status'] + sorted(datasheet_df['Status'].dropna().unique().tolist())
     
-    # Calculate expiring in 3 months
+    # Calculate expiring in 3 months (only non-consumed items)
     three_months_from_now = today + pd.DateOffset(months=3)
     expiring_soon = datasheet_df[
         (datasheet_df['Expiry date'] >= today) & 
-        (datasheet_df['Expiry date'] <= three_months_from_now)
+        (datasheet_df['Expiry date'] <= three_months_from_now) &
+        (datasheet_df['Status'] != 'Consumed')
     ]
     expiring_count = len(expiring_soon)
     
     # Convert DataFrame to HTML table or pass data to template
-    table_data = datasheet_df.to_dict('records')  # Convert to list of dictionaries
-    columns = datasheet_df.columns.tolist()  # Get column names
+    table_data = datasheet_df_display.to_dict('records')  # Convert to list of dictionaries
+    columns = datasheet_df_display.columns.tolist()  # Get column names
+    
+    # Add original data with _id for actions - CONVERT ObjectId to string
+    original_data = list(datasheet_collection.find())
+    for item in original_data:
+        item['_id'] = str(item['_id'])  # Convert ObjectId to string
     
     return render_template('home.html', 
                          username=username,
@@ -154,8 +181,111 @@ def home():
                          unique_sections=unique_sections,
                          unique_status=unique_status,
                          total_records=len(datasheet_df),
-                         expiring_count=expiring_count)
+                         expiring_count=expiring_count,
+                         original_data=original_data)
 
+# Edit CRM route
+@app.route('/edit_crm/<crm_id>', methods=['GET', 'POST'])
+@login_required
+def edit_crm(crm_id):
+    from bson import ObjectId
+    
+    if request.method == 'POST':
+        # Handle form submission
+        form_data = {
+            'Name': request.form.get('name_of_standard'),
+            'Lab Code': request.form.get('lab_code'),
+            'Expiry date': pd.to_datetime(request.form.get('expiry_date')),
+            'Make': request.form.get('make') or 'NA',
+            'Quantity': request.form.get('quantity') or 'NA',
+            'Purity': request.form.get('purity') or 'NA',
+            'Product Code': request.form.get('product_code') or 'NA',
+            'CAS no.': request.form.get('cas_no') or 'NA',
+            'Section': request.form.get('section'),
+            'Location': request.form.get('location') or 'NA',
+            'Box No.': request.form.get('box_no') or 'NA',
+            'Remarks': request.form.get('remarks') or 'NA'
+        }
+        
+        # Update in MongoDB
+        try:
+            datasheet_collection.update_one(
+                {'_id': ObjectId(crm_id)}, 
+                {'$set': form_data}
+            )
+            flash('CRM entry updated successfully!', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            flash(f'Error updating entry: {str(e)}', 'error')
+            return redirect(url_for('edit_crm', crm_id=crm_id))
+    
+    # GET request - display form with existing data
+    try:
+        crm_data = datasheet_collection.find_one({'_id': ObjectId(crm_id)})
+        if not crm_data:
+            flash('CRM entry not found!', 'error')
+            return redirect(url_for('home'))
+        
+        # Get unique values for dropdowns
+        datasheet_df = pd.DataFrame(list(datasheet_collection.find()))
+        unique_names = sorted(datasheet_df['Name'].dropna().unique().tolist()) if not datasheet_df.empty else []
+        unique_sections = sorted(datasheet_df['Section'].dropna().unique().tolist()) if not datasheet_df.empty else []
+        
+        return render_template('edit_crm.html',
+                             crm_data=crm_data,
+                             unique_names=unique_names,
+                             unique_sections=unique_sections)
+    except Exception as e:
+        flash(f'Error loading entry: {str(e)}', 'error')
+        return redirect(url_for('home'))
+
+# Delete CRM route
+@app.route('/delete_crm/<crm_id>', methods=['POST'])
+@login_required
+def delete_crm(crm_id):
+    from bson import ObjectId
+    
+    try:
+        result = datasheet_collection.delete_one({'_id': ObjectId(crm_id)})
+        if result.deleted_count:
+            flash('CRM entry deleted successfully!', 'success')
+        else:
+            flash('CRM entry not found!', 'error')
+    except Exception as e:
+        flash(f'Error deleting entry: {str(e)}', 'error')
+    
+    return redirect(url_for('home'))
+
+# Mark Consumed/Not Consumed route
+@app.route('/toggle_consumed/<crm_id>', methods=['POST'])
+@login_required
+def toggle_consumed(crm_id):
+    from bson import ObjectId
+    
+    try:
+        # Get current consumed status
+        crm_data = datasheet_collection.find_one({'_id': ObjectId(crm_id)})
+        if not crm_data:
+            flash('CRM entry not found!', 'error')
+            return redirect(url_for('home'))
+        
+        # Toggle consumed status
+        current_consumed = crm_data.get('Consumed', 0)
+        new_consumed = 1 if current_consumed != 1 else 0
+        
+        # Update in database
+        datasheet_collection.update_one(
+            {'_id': ObjectId(crm_id)}, 
+            {'$set': {'Consumed': new_consumed}}
+        )
+        
+        action = 'marked as consumed' if new_consumed == 1 else 'marked as not consumed'
+        flash(f'CRM entry {action} successfully!', 'success')
+        
+    except Exception as e:
+        flash(f'Error updating consumed status: {str(e)}', 'error')
+    
+    return redirect(url_for('home'))
 
 # Logout route - THIS WAS MISSING
 @app.route('/logout')

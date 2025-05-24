@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit CRM Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header/Banner Section */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 20px;
+        }
+
+        /* Navigation buttons container */
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Home button styling */
+        .home-btn {
+            background-color: #2ed573;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .home-btn:hover {
+            background-color: #26d365;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Logout button styling */
+        .logout-btn {
+            background-color: #ff4757;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background-color: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Form Container Styling */
+        .content-section {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Form Layout */
+        form {
+            padding: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* Input Styling */
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cancel-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+            transform: translateY(-1px);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #2ed573 0%, #26d365 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(46, 213, 115, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                padding: 15px 20px;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+                order: 2;
+            }
+
+            .logo {
+                order: 1;
+            }
+
+            .nav-buttons {
+                order: 3;
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .home-btn, .logout-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .form-container {
+                margin: 0 15px;
+            }
+
+            form {
+                padding: 20px;
+            }
+
+            .form-header {
+                padding: 20px;
+            }
+
+            .form-header h2 {
+                font-size: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .cancel-btn,
+            .save-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-buttons {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .home-btn, .logout-btn {
+                width: 100%;
+                max-width: 200px;
+                text-align: center;
+            }
+        }
+
+        /* Flash message styling */
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header/Banner Section -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Envirocare Labs">
+        </div>
+        <h1>CRM Management System</h1>
+        <div class="nav-buttons">
+            <a href="{{ url_for('home') }}" class="home-btn">Home</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- Content Section - Edit Form -->
+    <div class="content-section">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Edit CRM Entry</h2>
+            </div>
+            
+            <form id="editCrmForm" method="POST">
+                <!-- Row 1: Name of Standard and Lab Code -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nameStandard">Name of the Standard</label>
+                        <select id="nameStandard" name="name_of_standard" required>
+                            {% for name in unique_names %}
+                            <option value="{{ name }}" {% if name == crm_data.Name %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="labCode">Lab Code</label>
+                        <input type="text" id="labCode" name="lab_code" value="{{ crm_data['Lab Code'] }}" required readonly>
+                        <small style="color: #666; font-size: 12px;">Lab Code cannot be changed during editing</small>
+                    </div>
+                </div>
+
+                <!-- Row 2: Expiry Date and Make -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="date" id="expiryDate" name="expiry_date" 
+                               value="{{ crm_data['Expiry date'].strftime('%Y-%m-%d') if crm_data['Expiry date'] else '' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="make">Make</label>
+                        <input type="text" id="make" name="make" value="{{ crm_data.Make if crm_data.Make != 'NA' else '' }}">
+                    </div>
+                </div>
+
+                <!-- Row 3: Quantity and Purity -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="text" id="quantity" name="quantity" value="{{ crm_data.Quantity if crm_data.Quantity != 'NA' else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="purity">Purity</label>
+                        <input type="text" id="purity" name="purity" value="{{ crm_data.Purity if crm_data.Purity != 'NA' else '' }}">
+                    </div>
+                </div>
+
+                <!-- Row 4: Product Code and CAS No -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCode">Product Code</label>
+                        <input type="text" id="productCode" name="product_code" value="{{ crm_data['Product Code'] if crm_data['Product Code'] != 'NA' else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="casNo">CAS No</label>
+                        <input type="text" id="casNo" name="cas_no" value="{{ crm_data['CAS no.'] if crm_data['CAS no.'] != 'NA' else '' }}">
+                    </div>
+                </div>
+
+                <!-- Row 5: Section and Location -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="section">Section</label>
+                        <select id="section" name="section" required>
+                            {% for section in unique_sections %}
+                            <option value="{{ section }}" {% if section == crm_data.Section %}selected{% endif %}>{{ section }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" value="{{ crm_data.Location if crm_data.Location != 'NA' else '' }}">
+                    </div>
+                </div>
+
+                <!-- Row 6: Box No and Remarks -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="boxNo">Box No</label>
+                        <input type="text" id="boxNo" name="box_no" value="{{ crm_data['Box No.'] if crm_data['Box No.'] != 'NA' else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="remarks">Remarks</label>
+                        <input type="text" id="remarks" name="remarks" value="{{ crm_data.Remarks if crm_data.Remarks != 'NA' else '' }}">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <a href="{{ url_for('home') }}" class="cancel-btn">Cancel</a>
+                    <button type="submit" class="save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
