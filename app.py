@@ -3,95 +3,29 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import bcrypt
 from datetime import datetime, date
-
+from functools import wraps
+import pandas as pd
 # Create Flask application instance
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'  # Change this in production
 
-def verify_password(password, hashed):
-    """Verify a password against its hash"""
-    try:
-        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
-    except Exception:
-        return False
-
+# Set a secret key for session management - FIXED: was missing 'key'
+app.secret_key = 'your_secret_key_here_make_it_secure_in_production'
 
 # MongoDB connection - MAKE SURE THIS MATCHES YOUR WORKING CONNECTION
 uri = "mongodb+srv://maku:abcd@cluster0.nv8kq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(uri, server_api=ServerApi('1'))
 
-# Get database and collections
 db = client['suj_CRM']
 login_collection = db['login']
-datasheet_collection = db['datasheet']
+datasheet_collection = db['noGPT']
 
-# Test connection
 try:
     client.admin.command('ping')
-    print("✅ Successfully connected to MongoDB!")
+    print("MongoDB connection successful")
 except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
+    print("MongoDB connection failed:", e)
 
-def add_status_to_records(records):
-    """Add expiry status to each record and update in database"""
-    current_date = date.today()
-    
-    for record in records:
-        expiry_date_str = record.get('Expiry date', '')
-        
-        if expiry_date_str and expiry_date_str != 'N/A':
-            try:
-                # Handle different date formats
-                if isinstance(expiry_date_str, str):
-                    # Remove time part if present (e.g., "2026-11-07 00:00:00" -> "2026-11-07")
-                    if ' ' in expiry_date_str:
-                        expiry_date_str = expiry_date_str.split(' ')[0]
-                    
-                    # Parse the date string
-                    expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
-                elif hasattr(expiry_date_str, 'date'):
-                    # If it's already a datetime object
-                    expiry_date = expiry_date_str.date()
-                else:
-                    # If it's already a date object
-                    expiry_date = expiry_date_str
-                
-                # Compare with current date
-                if expiry_date < current_date:
-                    record['Status'] = 'EXPIRED'
-                    record['status_class'] = 'status-expired'
-                else:
-                    record['Status'] = 'ACTIVE'
-                    record['status_class'] = 'status-active'
-                    
-            except (ValueError, TypeError) as e:
-                print(f"⚠️  Date parsing error for {expiry_date_str}: {e}")
-                record['Status'] = 'UNKNOWN'
-                record['status_class'] = 'status-unknown'
-        else:
-            record['Status'] = 'NO DATE'
-            record['status_class'] = 'status-unknown'
-    
-    return records
-
-def update_status_in_database(records):
-    """Update status in MongoDB for all records"""
-    try:
-        for record in records:
-            lab_code = record.get('Lab Code')
-            status = record.get('Status')
-            
-            if lab_code and status:
-                # Update the record in database with the new status
-                datasheet_collection.update_one(
-                    {'Lab Code': lab_code},
-                    {'$set': {'Status': status, '_status_updated': datetime.now()}}
-                )
-        
-        print(f"✅ Updated status for {len(records)} records in database")
-        
-    except Exception as e:
-        print(f"❌ Error updating status in database: {e}")
+def verify_password(password, hashed):
     """Verify a password against its hash"""
     try:
         return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
@@ -134,6 +68,16 @@ def authenticate_user(username, password):
         print(f"❌ Authentication error: {e}")
         return None
 
+def login_required(f):
+    """Decorator to require login for certain routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Route for login page (root)
 @app.route('/')
 def login():
@@ -142,87 +86,93 @@ def login():
         return redirect(url_for('home'))
     return render_template('login.html')
 
-# Route to handle login form submission
+# Route to handle login form submission - THIS WAS MISSING
 @app.route('/login', methods=['POST'])
 def login_post():
-    username = request.form['username']
-    password = request.form['password']
+    username = request.form.get('username')
+    password = request.form.get('password')
     
-    print(f"🔐 Login attempt: username='{username}', password='{password}'")
+    if not username or not password:
+        flash('Please enter both username and password.', 'error')
+        return redirect(url_for('login'))
     
     # Authenticate user
     user = authenticate_user(username, password)
     
     if user:
-        # Login successful - store user in session
+        # Store user info in session
         session['username'] = user['username']
+        session['user_id'] = str(user['_id'])
         session['role'] = user.get('role', 'user')
+        
         flash(f'Welcome back, {username}!', 'success')
-        print(f"✅ Login successful for {username}")
         return redirect(url_for('home'))
     else:
-        # Login failed
-        flash('Invalid username or password', 'error')
-        print(f"❌ Login failed for {username}")
+        flash('Invalid username or password.', 'error')
         return redirect(url_for('login'))
 
-# Route for home page (after login) - shows all data
+# Home route - redirect to home.html after login
 @app.route('/home')
+@login_required
 def home():
-    # Check if user is logged in
-    if 'username' not in session:
-        flash('Please log in to access this page', 'error')
-        return redirect(url_for('login'))
+    username = session.get('username', 'User')
+    datasheet_df = pd.DataFrame(list(datasheet_collection.find()))
+    datasheet_df['Expiry date'] = pd.to_datetime(datasheet_df['Expiry date'], errors='coerce')
+    today = pd.Timestamp.today().normalize()
+    datasheet_df['Status'] = datasheet_df['Expiry date'].apply(lambda x: 'Expired' if x < today else 'Active')
     
-    username = session['username']
+    # Remove _id column and reorder columns with Status first
+    if '_id' in datasheet_df.columns:
+        datasheet_df = datasheet_df.drop('_id', axis=1)
     
-    try:
-        # Debug: Test connection
-        print("🔍 Testing database connection...")
-        client.admin.command('ping')
-        print("✅ Database connection successful")
-        
-        # Debug: Check collection
-        total_records = datasheet_collection.count_documents({})
-        print(f"📊 Total records in database: {total_records}")
-        
-        # Get all data from datasheet (limit to 100 for performance)
-        all_records = list(datasheet_collection.find({}, {'_id': 0}).limit(100))
-        print(f"📋 Records fetched: {len(all_records)}")
-        
-        # Add status to records based on expiry date
-        all_records = add_status_to_records(all_records)
-        
-        # Update status in database at every login
-        update_status_in_database(all_records)
-        
-        if all_records:
-            print(f"🔬 Sample record keys: {list(all_records[0].keys())}")
-            print(f"🧪 First Lab Code: {all_records[0].get('Lab Code', 'MISSING')}")
-            print(f"📅 First Status: {all_records[0].get('Status', 'MISSING')}")
-            print(f"📆 First Expiry: {all_records[0].get('Expiry date', 'MISSING')}")
-        
-        return render_template('home.html', 
-                             username=username,
-                             records=all_records,
-                             total_records=total_records)
+    # Reorder columns to put Status first
+    other_columns = [col for col in datasheet_df.columns if col != 'Status']
+    if 'Status' in datasheet_df.columns:
+        ordered_columns = ['Status'] + other_columns
+        datasheet_df = datasheet_df[ordered_columns]
     
-    except Exception as e:
-        print(f"❌ Database error: {e}")
-        flash(f'Database error: {str(e)}', 'error')
-        return render_template('home.html', 
-                             username=username,
-                             records=[],
-                             total_records=0)
+    # Get unique values for dropdowns
+    unique_sections = ['All Sections'] + sorted(datasheet_df['Section'].dropna().unique().tolist())
+    unique_status = ['All Status'] + sorted(datasheet_df['Status'].dropna().unique().tolist())
+    
+    # Calculate expiring in 3 months
+    three_months_from_now = today + pd.DateOffset(months=3)
+    expiring_soon = datasheet_df[
+        (datasheet_df['Expiry date'] >= today) & 
+        (datasheet_df['Expiry date'] <= three_months_from_now)
+    ]
+    expiring_count = len(expiring_soon)
+    
+    # Convert DataFrame to HTML table or pass data to template
+    table_data = datasheet_df.to_dict('records')  # Convert to list of dictionaries
+    columns = datasheet_df.columns.tolist()  # Get column names
+    
+    return render_template('home.html', 
+                         username=username,
+                         table_data=table_data, 
+                         columns=columns,
+                         unique_sections=unique_sections,
+                         unique_status=unique_status,
+                         total_records=len(datasheet_df),
+                         expiring_count=expiring_count)
 
-# Route for logout
+
+# Logout route - THIS WAS MISSING
 @app.route('/logout')
 def logout():
     username = session.get('username', 'User')
     session.clear()
-    flash(f'Goodbye, {username}!', 'info')
+    flash(f'Goodbye, {username}! You have been logged out.', 'info')
     return redirect(url_for('login'))
+
+
+@app.route('/create_crm')
+@login_required
+def create_crm():
+    """Route to display the Create CRM form"""
+    return render_template('create_crm.html')
+
 
 if __name__ == '__main__':
     # Run the application in debug mode
-    app.run(debug=True, host='0.0.0.0', port=8010)
+    app.run(debug=True, host='0.0.0.0', port=8000)

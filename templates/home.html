@@ -3,111 +3,613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Dashboard - Lab Data</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="header">
-        <h1>Lab Data Management - Welcome, {{ username }}!</h1>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </div>
-    
-    <div class="nav">
-        <a href="{{ url_for('home') }}">Lab Data</a>
-        <a href="/api/stats">Statistics</a>
-    </div>
-    
-    <div class="container">
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <div class="data-section">
-            <h2>Complete Lab Inventory</h2>
-            
-            <div class="stats-info">
-                <strong>Total Records: {{ total_records }}</strong> | 
-                Database: suj_CRM.datasheet | 
-                User: {{ username }}
-            </div>
-            
-            <input type="text" class="search-box" id="searchInput" placeholder="Search by Lab Code, Name, or any field..." onkeyup="searchTable()">
-            
-            {% if records %}
-            <table class="data-table" id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Lab Code</th>
-                        <th>Name</th>
-                        <th>Expiry Date</th>
-                        <th>Make</th>
-                        <th>Quantity</th>
-                        <th>Purity</th>
-                        <th>Product Code</th>
-                        <th>CAS No.</th>
-                        <th>Section</th>
-                        <th>Location</th>
-                        <th>Box No.</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in records %}
-                    <tr>
-                        <td><span class="{{ record.get('status_class', 'status-unknown') }}">{{ record.get('Status', 'UNKNOWN') }}</span></td>
-                        <td><strong>{{ record.get('Lab Code', 'N/A') }}</strong></td>
-                        <td>{{ record.get('Name', 'N/A') }}</td>
-                        <td>{{ record.get('Expiry date', 'N/A') }}</td>
-                        <td>{{ record.get('Make', 'N/A') }}</td>
-                        <td>{{ record.get('Quantity', 'N/A') }}</td>
-                        <td>{{ record.get('Purity', 'N/A') }}</td>
-                        <td>{{ record.get('Product Code', 'N/A') }}</td>
-                        <td>{{ record.get('CAS no.', 'N/A') }}</td>
-                        <td>{{ record.get('Section', 'N/A') }}</td>
-                        <td>{{ record.get('Location', 'N/A') }}</td>
-                        <td>{{ record.get('Box No.', 'N/A') }}</td>
-                        <td>{{ record.get('Remarks', 'N/A') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div style="text-align: center; padding: 50px;">
-                <h3>No Data Available</h3>
-                <p>No lab data found in the database. Please upload your Excel data first.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <script>
-        function searchTable() {
-            var input, filter, table, tr, td, i, j, txtValue;
-            input = document.getElementById("searchInput");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("dataTable");
-            tr = table.getElementsByTagName("tr");
-            
-            for (i = 1; i < tr.length; i++) {
-                tr[i].style.display = "none";
-                td = tr[i].getElementsByTagName("td");
-                for (j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
-                            break;
-                        }
-                    }
-                }
+    <title>CRM Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Section A - Header/Banner */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 20px;
+        }
+
+        .logout-btn {
+            background-color: #ff4757;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn:hover {
+            background-color: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Section B - Table Container */
+        .content-section {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .table-header {
+            background-color: #4834d4;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .table-header h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .table-header p {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: #f8f9fa;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+
+        /* Status styling - now as first column */
+        .status-active {
+            background-color: #2ed573;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .status-expired {
+            background-color: #ff4757;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        /* First column (Status) styling */
+        th:first-child, td:first-child {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Middle Section Styling */
+        .middle-section {
+            background: white;
+            padding: 25px 30px;
+            margin: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Button Styling */
+        .create-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Search Input */
+        .search-input {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 280px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Dropdown Styling */
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 140px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Tab Buttons */
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #666;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn:not(.active):hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        /* Badge for expiring count */
+        .expiring-badge {
+            background: #ff4757;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .middle-section {
+                flex-direction: column;
+                align-items: stretch;
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .controls-left, .controls-right {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .search-input {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
             }
         }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+
+            .content-section {
+                padding: 15px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+
+        /* Scrollable table for small screens */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        /* Welcome message */
+        .welcome-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .welcome-section h3 {
+            color: #4834d4;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body class="home-page">
+    <!-- Section A: Header/Banner -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Envirocare Labs">
+        </div>
+        <h1>CRM Management System</h1>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+
+    <!-- Middle Section: Controls and Filters -->
+    <div class="middle-section">
+        <!-- Left Half: Controls -->
+        <div class="controls-left">
+            <a href="{{ url_for('create_crm') }}" class="create-btn">Create New CRM Entry</a>
+            
+            <input type="text" 
+                   class="search-input" 
+                   id="searchInput" 
+                   placeholder="Search CRM entries...">
+            
+            <select class="filter-select" id="sectionFilter">
+                {% for section in unique_sections %}
+                <option value="{{ section }}">{{ section }}</option>
+                {% endfor %}
+            </select>
+            
+            <select class="filter-select" id="statusFilter">
+                {% for status in unique_status %}
+                <option value="{{ status }}">{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Right Half: Tab Buttons -->
+        <div class="controls-right">
+            <div class="tab-buttons">
+                <button class="tab-btn active" id="allCrmsBtn" onclick="showAllCrms()">
+                    All CRMs ({{ total_records }})
+                </button>
+                <button class="tab-btn" id="expiringBtn" onclick="showExpiring()">
+                    Expiring in 3 Months
+                    {% if expiring_count > 0 %}
+                    <span class="expiring-badge">{{ expiring_count }}</span>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section B: Table Content -->
+    <div class="content-section">
+        <div class="welcome-section">
+            <h3>Welcome, {{ username }}!</h3>
+            <p>Here's your complete datasheet overview with current status information.</p>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>Datasheet Records</h2>
+                <p>Total Records: {{ table_data|length }}</p>
+            </div>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for column in columns %}
+                            <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table_data %}
+                        <tr>
+                            {% for column in columns %}
+                            <td>
+                                {% if column == 'Status' %}
+                                    {% if row[column] == 'Active' %}
+                                        <span class="status-active">{{ row[column] }}</span>
+                                    {% else %}
+                                        <span class="status-expired">{{ row[column] }}</span>
+                                    {% endif %}
+                                {% elif column == 'Expiry date' and row[column] %}
+                                    {{ row[column].strftime('%Y-%m-%d') if row[column] else 'N/A' }}
+                                {% else %}
+                                    {{ row[column] if row[column] is not none else 'N/A' }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% if table_data|length == 0 %}
+                        <tr>
+                            <td colspan="{{ columns|length }}" style="text-align: center; padding: 40px; color: #999;">
+                                No records found
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store original table data
+        const originalTableData = {{ table_data | tojson }};
+        let currentData = [...originalTableData];
+        
+        // Get today's date for expiring calculations
+        const today = new Date();
+        const threeMonthsFromNow = new Date();
+        threeMonthsFromNow.setMonth(today.getMonth() + 3);
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTable();
+        });
+
+        // Filter dropdowns
+        document.getElementById('sectionFilter').addEventListener('change', function() {
+            filterTable();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterTable();
+        });
+
+        // Filter table based on search and dropdowns
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sectionFilter = document.getElementById('sectionFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            let filteredData = [...currentData];
+            
+            // Apply search filter (case insensitive, searches all columns)
+            if (searchTerm) {
+                filteredData = filteredData.filter(row => {
+                    return Object.values(row).some(value => {
+                        if (value === null || value === undefined) return false;
+                        return value.toString().toLowerCase().includes(searchTerm);
+                    });
+                });
+            }
+            
+            // Apply section filter
+            if (sectionFilter && sectionFilter !== 'All Sections') {
+                filteredData = filteredData.filter(row => row.Section === sectionFilter);
+            }
+            
+            // Apply status filter
+            if (statusFilter && statusFilter !== 'All Status') {
+                filteredData = filteredData.filter(row => row.Status === statusFilter);
+            }
+            
+            updateTable(filteredData);
+        }
+
+        // Show all CRMs
+        function showAllCrms() {
+            currentData = [...originalTableData];
+            document.getElementById('allCrmsBtn').classList.add('active');
+            document.getElementById('expiringBtn').classList.remove('active');
+            clearFilters();
+            filterTable();
+        }
+
+        // Show expiring in 3 months
+        function showExpiring() {
+            const expiringData = originalTableData.filter(row => {
+                if (!row['Expiry date']) return false;
+                const expiryDate = new Date(row['Expiry date']);
+                return expiryDate >= today && expiryDate <= threeMonthsFromNow;
+            });
+            
+            currentData = expiringData;
+            document.getElementById('expiringBtn').classList.add('active');
+            document.getElementById('allCrmsBtn').classList.remove('active');
+            clearFilters();
+            filterTable();
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sectionFilter').value = 'All Sections';
+            document.getElementById('statusFilter').value = 'All Status';
+        }
+
+        // Update table with filtered data
+        function updateTable(data) {
+            const tbody = document.querySelector('tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="{{ columns|length }}" style="text-align: center; padding: 40px; color: #999;">
+                            No records found matching your criteria
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map(row => {
+                return `
+                    <tr>
+                        {% for column in columns %}
+                        <td>
+                            ${formatCellValue(row['{{ column }}'], '{{ column }}')}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Format cell values (especially for Status and dates)
+        function formatCellValue(value, columnName) {
+            if (value === null || value === undefined) {
+                return 'N/A';
+            }
+            
+            if (columnName === 'Status') {
+                const statusClass = value === 'Active' ? 'status-active' : 'status-expired';
+                return `<span class="${statusClass}">${value}</span>`;
+            }
+            
+            if (columnName === 'Expiry date' && value) {
+                const date = new Date(value);
+                return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            }
+            
+            return value;
+        }
+
+        // Update record counts in tab buttons
+        function updateCounts() {
+            const allCount = originalTableData.length;
+            const expiringCount = originalTableData.filter(row => {
+                if (!row['Expiry date']) return false;
+                const expiryDate = new Date(row['Expiry date']);
+                return expiryDate >= today && expiryDate <= threeMonthsFromNow;
+            }).length;
+            
+            document.getElementById('allCrmsBtn').innerHTML = `All CRMs (${allCount})`;
+            document.getElementById('expiringBtn').innerHTML = `
+                Expiring in 3 Months
+                ${expiringCount > 0 ? `<span class="expiring-badge">${expiringCount}</span>` : ''}
+            `;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCounts();
+        });
     </script>
 </body>
 </html>
