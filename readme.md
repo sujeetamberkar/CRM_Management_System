@@ -4,6 +4,7 @@ A comprehensive web-based Chemical Reference Material (CRM) management system de
 
 ## 📋 Table of Contents
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
@@ -18,8 +19,6 @@ A comprehensive web-based Chemical Reference Material (CRM) management system de
 - Secure user login with bcrypt password hashing
 - Session management
 - Protected routes with login requirements
-- Username : admin
-- Password : abcd 
 
 ### 📊 **Dashboard & Overview**
 - **Welcome dashboard** with user-specific greetings
@@ -120,8 +119,8 @@ crm-management-system/
 #### On Windows:
 ```bash
 # Clone the repository
-git clone https://github.com/sujeetamberkar/CRM_Management_System
-cd CRM_Management_System
+git clone <repository-url>
+cd crm-management-system
 
 # Create virtual environment
 python3 -m venv virtual
@@ -139,8 +138,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone https://github.com/sujeetamberkar/CRM_Management_System
-cd CRM_Management_System
+git clone <repository-url>
+cd crm-management-system
 
 # Create virtual environment
 python3 -m venv virtual
@@ -160,8 +159,8 @@ python app.py
 #### On Windows:
 ```bash
 # Clone the repository
-git clone https://github.com/sujeetamberkar/CRM_Management_System
-cd CRM_Management_System
+git clone <repository-url>
+cd crm-management-system
 
 # Create conda environment
 conda create --name crm-env python=3.9
@@ -179,8 +178,8 @@ python app.py
 #### On Linux/macOS:
 ```bash
 # Clone the repository
-git clone https://github.com/sujeetamberkar/CRM_Management_System
-cd CRM_Management_System
+git clone <repository-url>
+cd crm-management-system
 
 # Create conda environment
 conda create --name crm-env python=3.9
@@ -195,7 +194,229 @@ pip install -r requirements.txt
 python app.py
 ```
 
-## 🗄️ Database Setup
+## 📊 Bulk Data Import
+
+If you have existing CRM data in Excel format, you can bulk upload it using the following script:
+
+### Prerequisites for Data Import
+- Excel file with CRM data (`data.xlsx`)
+- Pandas and pymongo installed
+- Valid MongoDB connection
+
+### Data Upload Script
+
+Create a new Python file (e.g., `upload_data.py`) and run this script:
+
+```python
+import pandas as pd
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from datetime import datetime
+
+# Read the Excel file
+df = pd.read_excel('data.xlsx')
+
+# Clean and validate expiry dates
+# Keep only rows where Expiry date can be converted to datetime
+df['Expiry date_temp'] = pd.to_datetime(df['Expiry date'], errors='coerce')
+
+# Remove rows where conversion failed (NaT values)
+df = df.dropna(subset=['Expiry date_temp'])
+
+# Convert to datetime objects (not strings) to match manual entry format
+df['Expiry date'] = df['Expiry date_temp']
+
+# Drop the temporary column
+df = df.drop('Expiry date_temp', axis=1)
+
+# Ensure consistent data formatting to match manual entry system
+def clean_data_format(df):
+    """
+    Clean and format data to match the manual entry system format
+    """
+    # Handle missing values consistently with manual entry system
+    for col in ['Make', 'Quantity', 'Purity', 'Product Code', 'CAS no.', 'Location', 'Box No.', 'Remarks']:
+        if col in df.columns:
+            df[col] = df[col].fillna('NA')
+            # Convert empty strings to 'NA'
+            df[col] = df[col].replace('', 'NA')
+    
+    # Initialize Consumed column (default: not consumed)
+    df['Consumed'] = 0
+    
+    # Calculate Status based on expiry date (same logic as manual entry)
+    today = pd.Timestamp.now().normalize()
+    
+    def calculate_status(row):
+        # Same logic as in the main application
+        if row.get('Consumed', 0) == 1:
+            return 'Consumed'
+        elif pd.notna(row['Expiry date']) and row['Expiry date'] < today:
+            return 'Expired'
+        else:
+            return 'Active'
+    
+    df['Status'] = df.apply(calculate_status, axis=1)
+    
+    # Ensure all required columns exist
+    required_columns = [
+        'Lab Code', 'Name', 'Expiry date', 'Make', 'Quantity', 
+        'Purity', 'Product Code', 'CAS no.', 'Section', 'Location', 
+        'Box No.', 'Remarks', 'Consumed', 'Status'
+    ]
+    
+    for col in required_columns:
+        if col not in df.columns:
+            if col == 'Consumed':
+                df[col] = 0
+            elif col == 'Status':
+                df[col] = 'Active'
+            else:
+                df[col] = 'NA'
+    
+    # Reorder columns to match the application structure
+    df = df[required_columns]
+    
+    return df
+
+# Clean and format the data
+df = clean_data_format(df)
+
+print(f"Remaining rows after cleanup: {len(df)}")
+print("Sample of formatted data:")
+print(df.head())
+
+# MongoDB connection - UPDATE WITH YOUR CONNECTION STRING
+uri = "mongodb+srv://maku:abcd@cluster0.nv8kq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Get database and collections (use same names as main application)
+db = client['suj_CRM']
+datasheet_collection = db['noGPT']
+
+print("🚀 Starting upload...")
+
+# Convert to dictionary format that matches manual entry structure
+records = df.to_dict('records')
+
+# Insert data into MongoDB
+datasheet_collection.insert_many(records)
+
+print("✅ Data uploaded successfully!")
+print(f"📊 Uploaded {len(records)} records")
+
+# Create unique index on Lab Code to prevent duplicates
+try:
+    datasheet_collection.create_index("Lab Code", unique=True)
+    print("🔒 Unique index created on Lab Code")
+except Exception as e:
+    print(f"ℹ️  Index might already exist: {e}")
+
+# Verify the upload by checking a few records
+print("\n🔍 Verification - Sample uploaded records:")
+sample_records = list(datasheet_collection.find().limit(3))
+for record in sample_records:
+    print(f"  Lab Code: {record['Lab Code']}, Status: {record['Status']}, Consumed: {record['Consumed']}")
+```
+
+### Expected Excel Format
+
+Your Excel file should have the following columns:
+
+| Column | Description | Example |
+|--------|-------------|---------|
+| **Lab Code** | Unique identifier | H-1 A |
+| **Name** | Standard name | Acesulfame Potassium |
+| **Expiry date** | Expiry date | 2026-11-07 |
+| **Make** | Manufacturer | Dr.Ehrenstorfer |
+| **Quantity** | Amount | 250 mg |
+| **Purity** | Purity percentage | 99.84 |
+| **Product Code** | Manufacturer code | DRE-C10010800 |
+| **CAS no.** | CAS Registry Number | 55589-62-3 |
+| **Section** | Lab section | HPLC |
+| **Location** | Storage location | EL-Deepfreezer-02 |
+| **Box No.** | Storage box | HPLC BOX |
+| **Remarks** | Additional notes | Y |
+
+### Running the Upload Script
+
+```bash
+# Make sure you're in your project directory
+cd crm-management-system
+
+# Activate your virtual environment
+# For venv:
+source virtual/bin/activate  # Linux/macOS
+# OR
+virtual\Scripts\activate     # Windows
+
+# For conda:
+conda activate crm-env
+
+# Place your data.xlsx file in the project directory
+# Run the upload script
+python upload_data.py
+```
+
+### Important Notes
+
+⚠️ **Before Running the Script:**
+1. **Backup your database** - The script will add new records
+2. **Check your Excel format** - Ensure columns match expected format
+3. **Validate dates** - Invalid dates will be automatically removed
+4. **Update connection string** - Use your actual MongoDB connection details
+
+✅ **What the Script Does:**
+- Reads Excel file and validates data
+- **Maintains datetime format** for expiry dates (same as manual entry)
+- **Adds Consumed column** with default value 0 (not consumed)
+- **Calculates Status automatically** using same logic as application
+- **Fills missing values with 'NA'** to match manual entry behavior
+- **Ensures all required columns exist** with proper defaults
+- **Reorders columns** to match application structure
+- Uploads data to MongoDB with verification
+- Creates unique index on Lab Code to prevent duplicates
+- Provides progress feedback and sample verification
+
+🔄 **Automatic Features:**
+- **Date consistency** - Maintains datetime objects like manual entry
+- **Status calculation** - Uses exact same logic as the application
+- **Consumed tracking** - Initializes consumption status properly
+- **Missing value handling** - Converts empty/null to 'NA' consistently
+- **Column standardization** - Ensures all required fields exist
+- **Duplicate prevention** - Lab Code uniqueness is enforced
+- **Data verification** - Shows sample records after upload
+- **Progress tracking** - Shows upload status and row counts
+
+### Troubleshooting Data Upload
+
+**Common Issues:**
+
+**Excel File Not Found**
+```bash
+FileNotFoundError: [Errno 2] No such file or directory: 'data.xlsx'
+```
+- Ensure `data.xlsx` is in the same directory as your script
+- Check the file name spelling
+
+**Date Format Issues**
+```bash
+# Invalid dates will be automatically removed
+# Check your Excel date format - should be recognizable date format
+```
+
+**Duplicate Lab Codes**
+```bash
+pymongo.errors.DuplicateKeyError
+```
+- Each Lab Code must be unique
+- Check for duplicate entries in your Excel file
+- Existing records with same Lab Code will cause conflicts
+
+**Connection Issues**
+- Verify your MongoDB connection string
+- Check internet connectivity
+- Ensure MongoDB Atlas IP whitelist includes your IP
 
 ### MongoDB Atlas (Recommended)
 1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
@@ -206,6 +427,7 @@ python app.py
 
 ```python
 # Replace with your MongoDB Atlas connection string
+# Example: mongodb+srv://maku:abcd@cluster.mongodb.net/
 client = MongoClient("mongodb+srv://username:password@cluster.mongodb.net/")
 ```
 
@@ -227,11 +449,11 @@ The application will automatically create the following collections:
 ## 🖥️ Usage
 
 ### First-Time Setup
-1. Start the application: `python app.py`
+1. Start the application: `python3 app.py`
 2. Open your browser and navigate to `http://127.0.0.1:8000`
 3. The application will create default admin credentials:
    - **Username**: `admin`
-   - **Password**: `admin123`
+   - **Password**: `abcd`
 4. Login and start adding your CRM inventory
 
 ### Adding CRM Records
@@ -303,9 +525,6 @@ The system uses intelligent status calculation:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-Sujeet Sanjay Amberkar
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -326,7 +545,9 @@ Sujeet Sanjay Amberkar
 - Check MongoDB connection
 
 **Login Issues**
-- Use default credentials: admin/admin123
+- Use default credentials: admin/abcd
 - Check if users collection was created properly
 - Verify bcrypt is working correctly
 
+# Author
+Sujeet Sanjay Amberkar
