@@ -1,0 +1,5 @@
+pandas
+flask
+pymongo[srv]==3.12
+openpyxl
+bcrypt
