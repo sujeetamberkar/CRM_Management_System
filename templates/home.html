@@ -61,173 +61,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Section B - Table Container */
-        .content-section {
-            padding: 30px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        .table-header {
-            background-color: #4834d4;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .table-header h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .table-header p {
-            opacity: 0.9;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        thead {
-            background-color: #f8f9fa;
-        }
-
-        th {
-            padding: 15px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #dee2e6;
-            position: sticky;
-            top: 0;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
-            vertical-align: middle;
-        }
-
-        tbody tr {
-            transition: background-color 0.2s ease;
-        }
-
-        tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        tbody tr:nth-child(even) {
-            background-color: #fdfdfd;
-        }
-
-        /* Status styling - updated with Consumed status */
-        .status-active {
-            background-color: #2ed573;
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            text-align: center;
-            min-width: 70px;
-        }
-
-        .status-expired {
-            background-color: #ff4757;
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            text-align: center;
-            min-width: 70px;
-        }
-
-        .status-consumed {
-            background-color: #ffa502;
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            text-align: center;
-            min-width: 70px;
-        }
-
-        /* Actions column styling */
-        .actions-cell {
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        .action-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .edit-btn {
-            background: #667eea;
-            color: white;
-        }
-
-        .edit-btn:hover {
-            background: #5a6fd8;
-        }
-
-        .delete-btn {
-            background: #ff4757;
-            color: white;
-        }
-
-        .delete-btn:hover {
-            background: #ff3742;
-        }
-
-        .consume-btn {
-            background: #ffa502;
-            color: white;
-        }
-
-        .consume-btn:hover {
-            background: #ff9502;
-        }
-
-        .unconsume-btn {
-            background: #2ed573;
-            color: white;
-        }
-
-        .unconsume-btn:hover {
-            background: #26d365;
-        }
-
-        /* First column (Status) styling */
-        th:first-child, td:first-child {
-            text-align: center;
-            font-weight: 600;
-        }
-
         /* Middle Section Styling */
         .middle-section {
             background: white;
@@ -351,8 +184,205 @@
             margin-left: 8px;
         }
 
+        /* Section B - Table Container */
+        .content-section {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .table-header {
+            background-color: #4834d4;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .table-header h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .table-header p {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: #f8f9fa;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+
+        /* Status styling - updated with Consumed status */
+        .status-active {
+            background-color: #2ed573;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .status-expired {
+            background-color: #ff4757;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .status-consumed {
+            background-color: #ffa502;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        /* First column (Status) styling */
+        th:first-child, td:first-child {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Actions column styling */
+        .actions-cell {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+
+        .consume-btn {
+            background: #ffa502;
+            color: white;
+        }
+
+        .consume-btn:hover {
+            background: #ff9502;
+        }
+
+        .unconsume-btn {
+            background: #2ed573;
+            color: white;
+        }
+
+        .unconsume-btn:hover {
+            background: #26d365;
+        }
+
+        /* Scrollable table for small screens */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        /* Welcome message */
+        .welcome-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .welcome-section h3 {
+            color: #4834d4;
+            margin-bottom: 10px;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+
             .middle-section {
                 flex-direction: column;
                 align-items: stretch;
@@ -373,18 +403,6 @@
             .tab-buttons {
                 flex-direction: column;
             }
-        }
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .header h1 {
-                margin: 0;
-                font-size: 24px;
-            }
 
             .content-section {
                 padding: 15px;
@@ -397,25 +415,6 @@
             th, td {
                 padding: 8px 6px;
             }
-        }
-
-        /* Scrollable table for small screens */
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        /* Welcome message */
-        .welcome-section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .welcome-section h3 {
-            color: #4834d4;
-            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -557,7 +556,6 @@
                 form.method = 'POST';
                 form.action = `/delete_crm/${crmId}`;
                 
-                // Add CSRF token if needed (you might want to add this)
                 document.body.appendChild(form);
                 form.submit();
             }
@@ -572,64 +570,6 @@
             
             document.body.appendChild(form);
             form.submit();
-        }
-
-        // Update table with filtered data (updated for actions column)
-        function updateTable(data) {
-            const tbody = document.querySelector('tbody');
-            
-            if (data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="{{ columns|length + 1 }}" style="text-align: center; padding: 40px; color: #999;">
-                            No records found matching your criteria
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = data.map((row, index) => {
-                const originalRow = originalDataWithIds[index];
-                return `
-                    <tr>
-                        {% for column in columns %}
-                        <td>
-                            ${formatCellValue(row['{{ column }}'], '{{ column }}')}
-                        </td>
-                        {% endfor %}
-                        <td class="actions-cell">
-                            <a href="/edit_crm/${originalRow._id}" class="action-btn edit-btn">Edit</a>
-                            <button class="action-btn delete-btn" onclick="confirmDelete('${originalRow._id}')">Delete</button>
-                            ${originalRow.Consumed === 1 ? 
-                                `<button class="action-btn unconsume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Not Consumed</button>` :
-                                `<button class="action-btn consume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Consumed</button>`
-                            }
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Format cell values (updated with Consumed status)
-        function formatCellValue(value, columnName) {
-            if (value === null || value === undefined) {
-                return 'N/A';
-            }
-            
-            if (columnName === 'Status') {
-                let statusClass = 'status-active';
-                if (value === 'Expired') statusClass = 'status-expired';
-                if (value === 'Consumed') statusClass = 'status-consumed';
-                return `<span class="${statusClass}">${value}</span>`;
-            }
-            
-            if (columnName === 'Expiry date' && value) {
-                const date = new Date(value);
-                return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-            }
-            
-            return value;
         }
 
         // Search functionality
@@ -707,10 +647,79 @@
             document.getElementById('sectionFilter').value = 'All Sections';
             document.getElementById('statusFilter').value = 'All Status';
         }
+
+        // Update table with filtered data (updated for actions column)
+        function updateTable(data) {
+            const tbody = document.querySelector('tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="{{ columns|length + 1 }}" style="text-align: center; padding: 40px; color: #999;">
+                            No records found matching your criteria
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map((row, index) => {
+                // Find the corresponding original row by matching Lab Code
+                const originalRow = originalDataWithIds.find(orig => 
+                    orig['Lab Code'] === row['Lab Code']
+                );
+                
+                if (!originalRow) {
+                    console.error('Could not find original row for:', row);
+                    return '';
+                }
+                
+                return `
+                    <tr>
+                        {% for column in columns %}
+                        <td>
+                            ${formatCellValue(row['{{ column }}'], '{{ column }}')}
+                        </td>
+                        {% endfor %}
+                        <td class="actions-cell">
+                            <a href="/edit_crm/${originalRow._id}" class="action-btn edit-btn">Edit</a>
+                            <button class="action-btn delete-btn" onclick="confirmDelete('${originalRow._id}')">Delete</button>
+                            ${originalRow.Consumed === 1 ? 
+                                `<button class="action-btn unconsume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Not Consumed</button>` :
+                                `<button class="action-btn consume-btn" onclick="toggleConsumed('${originalRow._id}')">Mark Consumed</button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Format cell values (updated with Consumed status)
+        function formatCellValue(value, columnName) {
+            if (value === null || value === undefined) {
+                return 'N/A';
+            }
+            
+            if (columnName === 'Status') {
+                let statusClass = 'status-active';
+                if (value === 'Expired') statusClass = 'status-expired';
+                if (value === 'Consumed') statusClass = 'status-consumed';
+                return `<span class="${statusClass}">${value}</span>`;
+            }
+            
+            if (columnName === 'Expiry date' && value) {
+                const date = new Date(value);
+                return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            }
+            
+            return value;
+        }
+
+        // Update record counts in tab buttons
         function updateCounts() {
             const allCount = originalTableData.length;
             const expiringCount = originalTableData.filter(row => {
-                if (!row['Expiry date']) return false;
+                if (!row['Expiry date'] || row.Status === 'Consumed') return false;
                 const expiryDate = new Date(row['Expiry date']);
                 return expiryDate >= today && expiryDate <= threeMonthsFromNow;
             }).length;
