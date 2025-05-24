@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard - Lab Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h1>Lab Data Management - Welcome, {{ username }}!</h1>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+    
+    <div class="nav">
+        <a href="{{ url_for('home') }}">Lab Data</a>
+        <a href="/api/stats">Statistics</a>
+    </div>
+    
+    <div class="container">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="data-section">
+            <h2>Complete Lab Inventory</h2>
+            
+            <div class="stats-info">
+                <strong>Total Records: {{ total_records }}</strong> | 
+                Database: suj_CRM.datasheet | 
+                User: {{ username }}
+            </div>
+            
+            <input type="text" class="search-box" id="searchInput" placeholder="Search by Lab Code, Name, or any field..." onkeyup="searchTable()">
+            
+            {% if records %}
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Lab Code</th>
+                        <th>Name</th>
+                        <th>Expiry Date</th>
+                        <th>Make</th>
+                        <th>Quantity</th>
+                        <th>Purity</th>
+                        <th>Product Code</th>
+                        <th>CAS No.</th>
+                        <th>Section</th>
+                        <th>Location</th>
+                        <th>Box No.</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td><span class="{{ record.get('status_class', 'status-unknown') }}">{{ record.get('Status', 'UNKNOWN') }}</span></td>
+                        <td><strong>{{ record.get('Lab Code', 'N/A') }}</strong></td>
+                        <td>{{ record.get('Name', 'N/A') }}</td>
+                        <td>{{ record.get('Expiry date', 'N/A') }}</td>
+                        <td>{{ record.get('Make', 'N/A') }}</td>
+                        <td>{{ record.get('Quantity', 'N/A') }}</td>
+                        <td>{{ record.get('Purity', 'N/A') }}</td>
+                        <td>{{ record.get('Product Code', 'N/A') }}</td>
+                        <td>{{ record.get('CAS no.', 'N/A') }}</td>
+                        <td>{{ record.get('Section', 'N/A') }}</td>
+                        <td>{{ record.get('Location', 'N/A') }}</td>
+                        <td>{{ record.get('Box No.', 'N/A') }}</td>
+                        <td>{{ record.get('Remarks', 'N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 50px;">
+                <h3>No Data Available</h3>
+                <p>No lab data found in the database. Please upload your Excel data first.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function searchTable() {
+            var input, filter, table, tr, td, i, j, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("dataTable");
+            tr = table.getElementsByTagName("tr");
+            
+            for (i = 1; i < tr.length; i++) {
+                tr[i].style.display = "none";
+                td = tr[i].getElementsByTagName("td");
+                for (j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
